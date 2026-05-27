@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Status — The Hot Box Sauna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #f7f3ee;
+    --warm-white: #fdfaf6;
+    --cedar: #7a3b1e;
+    --cedar-light: #a0522d;
+    --char: #1c1612;
+    --ash: #6b6560;
+    --smoke: #c8c0b8;
+    --steam: #e8e2da;
+    --glow: #d4793a;
+    --glow-soft: rgba(212,121,58,0.12);
+    --soon-bg: #fdf0e6;
+    --soon-text: #7a3b1e;
+    --upcoming-bg: #e8f1f8;
+    --upcoming-text: #1a4f7a;
+    --later-bg: #f0ede8;
+    --later-text: #5a534d;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--char);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BACKGROUND TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(212,121,58,0.08) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── LOGO / HEADER ── */
+  .brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3rem;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .brand-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--cedar);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 16px rgba(122,59,30,0.25);
+  }
+
+  .brand-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cedar);
+  }
+
+  .brand-tagline {
+    font-size: 12px;
+    color: var(--ash);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── HERO TEXT ── */
+  .hero {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 6vw, 38px);
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--char);
+    margin-bottom: 10px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--cedar);
+  }
+
+  .hero p {
+    font-size: 15px;
+    color: var(--ash);
+    line-height: 1.65;
+    max-width: 380px;
+    margin: 0 auto;
+  }
+
+  /* ── SEARCH CARD ── */
+  .search-card {
+    width: 100%;
+    background: var(--warm-white);
+    border: 1px solid var(--steam);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 2px 24px rgba(28,22,18,0.07), 0 1px 4px rgba(28,22,18,0.04);
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .input-wrap {
+    position: relative;
+    flex: 1;
+  }
+
+  .input-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--smoke);
+    pointer-events: none;
+    transition: color 0.2s;
+  }
+
+  .input-wrap:focus-within svg {
+    color: var(--glow);
+  }
+
+  #orderInput {
+    width: 100%;
+    padding: 14px 14px 14px 42px;
+    border: 1.5px solid var(--steam);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    background: var(--cream);
+    color: var(--char);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  #orderInput::placeholder { color: var(--smoke); }
+
+  #orderInput:focus {
+    border-color: var(--glow);
+    box-shadow: 0 0 0 4px rgba(212,121,58,0.1);
+  }
+
+  .search-btn {
+    padding: 14px 22px;
+    background: var(--cedar);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 2px 12px rgba(122,59,30,0.3);
+    letter-spacing: 0.02em;
+  }
+
+  .search-btn:hover {
+    background: var(--cedar-light);
+    box-shadow: 0 4px 16px rgba(122,59,30,0.35);
+  }
+
+  .search-btn:active { transform: scale(0.98); }
+
+  .search-hint {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--ash);
+    text-align: center;
+  }
+
+  /* ── RESULT AREA ── */
+  #result {
+    width: 100%;
+    animation: fadeUp 0.35s ease both;
+  }
+
+  /* FOUND STATE */
+  .result-found {
+    background: var(--warm-white);
+    border: 1px solid var(--steam);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 2px 24px rgba(28,22,18,0.07);
+  }
+
+  .result-header {
+    padding: 1.5rem 1.75rem 1.25rem;
+    border-bottom: 1px solid var(--steam);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .result-order-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ash);
+    margin-bottom: 4px;
+  }
+
+  .result-order-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    color: var(--char);
+  }
+
+  .result-body {
+    padding: 1.5rem 1.75rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  .result-field label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ash);
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .result-field .value {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--char);
+  }
+
+  .result-field .sub {
+    font-size: 12px;
+    color: var(--ash);
+    margin-top: 3px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+  }
+
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .badge-soon { background: var(--soon-bg); color: var(--soon-text); }
+  .badge-soon .badge-dot { background: var(--soon-text); }
+  .badge-upcoming { background: var(--upcoming-bg); color: var(--upcoming-text); }
+  .badge-upcoming .badge-dot { background: var(--upcoming-text); }
+  .badge-later { background: var(--later-bg); color: var(--later-text); }
+  .badge-later .badge-dot { background: var(--later-text); }
+
+  .result-footer {
+    padding: 1rem 1.75rem;
+    background: var(--cream);
+    border-top: 1px solid var(--steam);
+    font-size: 12px;
+    color: var(--ash);
+    line-height: 1.6;
+  }
+
+  /* NOT FOUND STATE */
+  .result-not-found {
+    background: var(--warm-white);
+    border: 1px solid var(--steam);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    box-shadow: 0 2px 24px rgba(28,22,18,0.07);
+  }
+
+  .not-found-icon {
+    width: 52px;
+    height: 52px;
+    background: var(--steam);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+  }
+
+  .result-not-found h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--char);
+    margin-bottom: 8px;
+  }
+
+  .result-not-found p {
+    font-size: 14px;
+    color: var(--ash);
+    line-height: 1.6;
+    max-width: 320px;
+    margin: 0 auto 1.25rem;
+  }
+
+  .contact-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--cedar);
+    text-decoration: none;
+    padding: 9px 18px;
+    border: 1.5px solid var(--cedar);
+    border-radius: 10px;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .contact-link:hover {
+    background: var(--cedar);
+    color: #fff;
+  }
+
+  /* ── DISCLAIMER ── */
+  .disclaimer {
+    width: 100%;
+    margin-top: 1.25rem;
+    padding: 1.25rem 1.5rem;
+    background: rgba(212,121,58,0.06);
+    border: 1px solid rgba(212,121,58,0.2);
+    border-radius: 14px;
+    font-size: 12.5px;
+    color: var(--ash);
+    line-height: 1.7;
+    animation: fadeUp 0.6s 0.35s ease both;
+  }
+
+  .disclaimer strong { color: var(--cedar); font-weight: 500; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 480px) {
+    .page { padding: 2.5rem 1rem 4rem; }
+    .search-card { padding: 1.5rem 1.25rem; }
+    .input-row { flex-direction: column; }
+    .result-body { grid-template-columns: 1fr; }
+    .result-header { flex-direction: column; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2C8 2 5 5.5 5 9c0 3 1.5 5.5 4 7v2h6v-2c2.5-1.5 4-4 4-7 0-3.5-3-7-7-7z"/>
+        <path d="M9 21h6M12 12v4"/>
+      </svg>
+    </div>
+    <div class="brand-name">The Hot Box Sauna</div>
+    <div class="brand-tagline">Order Status Portal</div>
+  </div>
+
+  <div class="hero">
+    <h1>When does my<br><em>sauna ship?</em></h1>
+    <p>Enter your order number to see your estimated ship date. Dates are tentative and subject to change.</p>
+  </div>
+
+  <div class="search-card">
+    <div class="input-row">
+      <div class="input-wrap">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="orderInput" placeholder="e.g. #10741 or LHB10028160" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
+      <button class="search-btn" onclick="doSearch()">Look up</button>
+    </div>
+    <div class="search-hint">Enter your full order number as it appears on your confirmation email</div>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="disclaimer">
+    <strong>Please note:</strong> The tentative ship date is when your sauna is estimated to be <strong>finalized and ready to leave our facility</strong> — not your delivery date. Actual delivery will follow based on your location and carrier transit time. Dates may shift due to material availability, supplier lead times, or carrier delays. We appreciate your patience and will communicate any updates as soon as possible.
+  </div>
+
+</div>
+
+<script>
+const today = new Date(); today.setHours(0,0,0,0);
+
+function parseDate(str) {
+  const p = str.split('/');
+  let y = parseInt(p[2]);
+  if (y < 100) y += 2000;
+  return new Date(y, parseInt(p[0]) - 1, parseInt(p[1]));
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function daysDiff(d) {
+  return Math.round((d - today) / (1000 * 60 * 60 * 24));
+}
+
+function win(days) {
+  return days <= 30 ? 'soon' : days <= 90 ? 'upcoming' : 'later';
+}
+
+const ORDERS = [{"num": "#10731", "date": "06/05/26"}, {"num": "#10741", "date": "06/05/26"}, {"num": "#10750", "date": "06/05/26"}, {"num": "#10754", "date": "06/05/26"}, {"num": "#10757", "date": "06/05/26"}, {"num": "#10764", "date": "06/05/26"}, {"num": "#10771", "date": "06/05/26"}, {"num": "#10773", "date": "06/05/26"}, {"num": "#10774", "date": "06/05/26"}, {"num": "#10776", "date": "06/05/26"}, {"num": "#10678", "date": "6/16/26"}, {"num": "#10688", "date": "6/16/26"}, {"num": "#10693", "date": "6/16/26"}, {"num": "#10700", "date": "6/16/26"}, {"num": "#10706", "date": "6/16/26"}, {"num": "#10724", "date": "6/16/26"}, {"num": "#10726", "date": "6/16/26"}, {"num": "#10730", "date": "6/16/26"}, {"num": "#10775", "date": "6/16/26"}, {"num": "#10781", "date": "6/16/26"}, {"num": "#10783", "date": "6/16/26"}, {"num": "#10809", "date": "6/16/26"}, {"num": "#10814", "date": "6/16/26"}, {"num": "#10823", "date": "6/16/26"}, {"num": "#10836", "date": "6/16/26"}, {"num": "#10856", "date": "6/16/26"}, {"num": "LHB10028160", "date": "6/16/26"}, {"num": "LHB10028161", "date": "6/16/26"}, {"num": "LHB10031627", "date": "6/16/26"}, {"num": "Rogue - #538185", "date": "6/16/26"}, {"num": "#10841", "date": "6/26/26"}, {"num": "#10850", "date": "6/26/26"}, {"num": "#10874", "date": "6/26/26"}, {"num": "#10877", "date": "6/26/26"}, {"num": "#10899", "date": "6/26/26"}, {"num": "#10906", "date": "6/26/26"}, {"num": "#10913", "date": "6/26/26"}, {"num": "#10916", "date": "6/26/26"}, {"num": "#10922", "date": "6/26/26"}, {"num": "#10928", "date": "6/26/26"}, {"num": "#10786", "date": "6/30/26"}, {"num": "#10787", "date": "6/30/26"}, {"num": "#10791", "date": "6/30/26"}, {"num": "#10793", "date": "6/30/26"}, {"num": "#10797", "date": "6/30/26"}, {"num": "#10801", "date": "6/30/26"}, {"num": "#10805", "date": "6/30/26"}, {"num": "#10838", "date": "6/30/26"}, {"num": "#10839", "date": "6/30/26"}, {"num": "Rogue - #539223", "date": "6/30/26"}, {"num": "#10813", "date": "7/7/26"}, {"num": "#10816", "date": "7/7/26"}, {"num": "#10817", "date": "7/7/26"}, {"num": "#10820", "date": "7/7/26"}, {"num": "#10821", "date": "7/7/26"}, {"num": "#10825", "date": "7/7/26"}, {"num": "#10827", "date": "7/7/26"}, {"num": "#10828", "date": "7/7/26"}, {"num": "#10834", "date": "7/7/26"}, {"num": "#10837", "date": "7/7/26"}, {"num": "#10858", "date": "7/17/26"}, {"num": "#10866", "date": "7/17/26"}, {"num": "#10868", "date": "7/17/26"}, {"num": "#10879", "date": "7/17/26"}, {"num": "#10880", "date": "7/17/26"}, {"num": "#10881", "date": "7/17/26"}, {"num": "#10884", "date": "7/17/26"}, {"num": "#10890", "date": "7/17/26"}, {"num": "Rogue #541166", "date": "7/17/26"}, {"num": "Rogue - #542575", "date": "7/17/26"}, {"num": "#10840", "date": "7/21/26"}, {"num": "#10845", "date": "7/21/26"}, {"num": "#10847", "date": "7/21/26"}, {"num": "#10849", "date": "7/21/26"}, {"num": "#10893", "date": "7/21/26"}, {"num": "#10900", "date": "7/21/26"}, {"num": "#10925", "date": "7/21/26"}, {"num": "#10926", "date": "7/21/26"}, {"num": "#10932", "date": "7/21/26"}, {"num": "Rogue - #541617", "date": "7/21/26"}, {"num": "#10901", "date": "7/24/26"}, {"num": "#10903", "date": "7/24/26"}, {"num": "#10905", "date": "7/24/26"}, {"num": "#10907", "date": "7/24/26"}, {"num": "#10908", "date": "7/24/26"}, {"num": "#10909", "date": "7/24/26"}, {"num": "#10911", "date": "7/24/26"}, {"num": "#10915", "date": "7/24/26"}, {"num": "#10917", "date": "7/24/26"}, {"num": "#10993", "date": "7/24/26"}, {"num": "#10931", "date": "8/4/26"}, {"num": "#10933", "date": "8/4/26"}, {"num": "#10934", "date": "8/4/26"}, {"num": "#10936", "date": "8/4/26"}, {"num": "#10941", "date": "8/4/26"}, {"num": "#10945", "date": "8/4/26"}, {"num": "#10952", "date": "8/4/26"}, {"num": "#10953", "date": "8/4/26"}, {"num": "#10954", "date": "8/4/26"}, {"num": "#10955", "date": "8/4/26"}, {"num": "#10956", "date": "8/4/26"}, {"num": "#10959", "date": "8/4/26"}, {"num": "#10960", "date": "8/4/26"}, {"num": "#10967", "date": "8/4/26"}, {"num": "#10969", "date": "8/4/26"}, {"num": "#10970", "date": "8/4/26"}, {"num": "#10974", "date": "8/4/26"}, {"num": "#10975", "date": "8/4/26"}, {"num": "#10978", "date": "8/4/26"}, {"num": "#10985", "date": "8/4/26"}, {"num": "#10980", "date": "8/18/26"}, {"num": "#10982", "date": "8/18/26"}, {"num": "#10986", "date": "8/18/26"}, {"num": "#10987", "date": "8/18/26"}, {"num": "#10988", "date": "8/18/26"}, {"num": "#10989", "date": "8/18/26"}, {"num": "#10990", "date": "8/18/26"}, {"num": "#10991", "date": "8/18/26"}, {"num": "#10999", "date": "8/18/26"}, {"num": "#11002", "date": "8/18/26"}, {"num": "#11003", "date": "8/18/26"}, {"num": "#11005", "date": "8/18/26"}, {"num": "#11006", "date": "8/18/26"}, {"num": "#11009", "date": "8/18/26"}, {"num": "#11011", "date": "8/18/26"}, {"num": "#11014", "date": "8/18/26"}, {"num": "#11015", "date": "8/18/26"}, {"num": "#11016", "date": "8/18/26"}, {"num": "#11017", "date": "8/18/26"}, {"num": "Rogue - #546382", "date": "8/18/26"}, {"num": "#10994", "date": "8/27/26"}, {"num": "#10996", "date": "8/27/26"}, {"num": "#10997", "date": "8/27/26"}, {"num": "#11008", "date": "8/27/26"}, {"num": "#11012", "date": "8/27/26"}, {"num": "#11018", "date": "8/27/26"}, {"num": "#11019", "date": "8/27/26"}, {"num": "#11022", "date": "8/27/26"}, {"num": "#11025", "date": "8/27/26"}, {"num": "#11029", "date": "8/27/26"}, {"num": "#11020", "date": "9/3/26"}, {"num": "#11021", "date": "9/3/26"}, {"num": "#11023", "date": "9/3/26"}, {"num": "#11024", "date": "9/3/26"}, {"num": "#11033", "date": "9/3/26"}, {"num": "#11035", "date": "9/3/26"}, {"num": "#11037", "date": "9/3/26"}, {"num": "#11038", "date": "9/3/26"}, {"num": "#11040", "date": "9/3/26"}, {"num": "#11041", "date": "9/3/26"}, {"num": "#11042", "date": "9/3/26"}, {"num": "#11045", "date": "9/3/26"}, {"num": "#11047", "date": "9/3/26"}, {"num": "#11048", "date": "9/3/26"}, {"num": "#11049", "date": "9/3/26"}, {"num": "#11050", "date": "9/3/26"}, {"num": "Rogue - #547398", "date": "9/3/26"}, {"num": "SO-1553", "date": "9/3/26"}];
+
+// Build lookup map — normalise key: strip leading #, lowercase, trim
+function normalise(s) {
+  return s.trim().replace(/^#/, '').toLowerCase();
+}
+
+const lookup = {};
+ORDERS.forEach(o => { lookup[normalise(o.num)] = o; });
+
+function doSearch() {
+  const raw = document.getElementById('orderInput').value.trim();
+  if (!raw) return;
+  const key = normalise(raw);
+  const match = lookup[key];
+  const el = document.getElementById('result');
+  el.innerHTML = '';
+  el.style.animation = 'none';
+  requestAnimationFrame(() => {
+    el.style.animation = '';
+    if (match) {
+      const date = parseDate(match.date);
+      const days = daysDiff(date);
+      const w = win(days);
+      const badgeClass = w === 'soon' ? 'badge-soon' : w === 'upcoming' ? 'badge-upcoming' : 'badge-later';
+      const badgeLabel = w === 'soon' ? 'Shipping soon' : w === 'upcoming' ? 'Upcoming' : 'Later this year';
+      const daysLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`;
+
+      el.innerHTML = `
+        <div class="result-found">
+          <div class="result-header">
+            <div>
+              <div class="result-order-label">Order found</div>
+              <div class="result-order-num">${match.num}</div>
+            </div>
+            <span class="badge ${badgeClass}">
+              <span class="badge-dot"></span>
+              ${badgeLabel}
+            </span>
+          </div>
+          <div class="result-body">
+            <div class="result-field">
+              <label>Tentative ship date</label>
+              <div class="value">${fmtDate(date)}</div>
+              <div class="sub">Subject to change</div>
+            </div>
+            <div class="result-field">
+              <label>Time until ship</label>
+              <div class="value">${daysLabel}</div>
+              <div class="sub">From today</div>
+            </div>
+          </div>
+          <div class="result-footer">
+            Questions about your order? Email us at <a href="mailto:support@thehotboxsauna.com" style="color:var(--cedar);font-weight:500;">support@thehotboxsauna.com</a>
+          </div>
+        </div>`;
+    } else {
+      el.innerHTML = `
+        <div class="result-not-found">
+          <div class="not-found-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ash)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </div>
+          <h3>Order not found</h3>
+          <p>We couldn't find <strong style="color:var(--char)">"${raw}"</strong> in our system. Please double-check your order number and try again.</p>
+          <a href="mailto:support@thehotboxsauna.com" class="contact-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Contact support
+          </a>
+        </div>`;
+    }
+  });
+}
+
+// Allow Enter key
+document.getElementById('orderInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+</script>
+</body>
+</html>
